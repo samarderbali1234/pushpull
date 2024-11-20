@@ -33,46 +33,65 @@ const FacebookLogin = () => {
             fjs.parentNode.insertBefore(js, fjs);
         }(document, 'script', 'facebook-jssdk'));
     }, []);
-    const handleLogin = () => {
-        window.FB.login(response => {
-            if (response.authResponse) {
-                const accessToken = response.authResponse.accessToken;
-                dispatch(setAccessToken(accessToken));
-    
-                // Vérifie si toutes les permissions demandées ont été accordées
-                window.FB.api('/me/permissions', (permissionsResponse) => {
-                    const declinedPermissions = permissionsResponse.data
-                        .filter(perm => perm.status === 'declined')
-                        .map(perm => perm.permission);
-    
-                        if (declinedPermissions.length > 0) {
-                            console.warn("Les permissions suivantes ont été refusées :", declinedPermissions.join(', '));
-                            console.log("Certaines permissions sont manquantes, l'application pourrait ne pas fonctionner complètement.");
-                        } else {
-                            console.log("Toutes les permissions demandées sont activées, aucun problème détecté.");
-                        }
-    
-                    window.FB.api('/me?fields=id,name,email,picture', user => {
-                        const userData = {
-                            id: user.id,
-                            name: user.name,
-                            email: user.email,
-                            profilePicture: user.picture.data.url,
-                        };
+  //récupération paralléle
+  const handleLogin = () => {
+    window.FB.login((response) => {
+        if (response.authResponse) {
+            const accessToken = response.authResponse.accessToken;
+            dispatch(setAccessToken(accessToken));
+
+            const fetchData = async () => {
+                try {
+                    // Exécution parallèle des appels avec promise all permet d'exécuter  tâches simultanément
+                    const [profileResponse, pagesData] = await Promise.all([
+                        // L'appel REST pour récupérer le profil
+                        fetch(`https://graph.facebook.com/v21.0/me?fields=id,name,email,picture&access_token=${accessToken}`)
+                            .then(res => res.json())
+                            .then(profile => ({
+                                id: profile.id,
+                                name: profile.name,
+                                email: profile.email,
+                                profilePicture: profile.picture.data.url,
+                            })),
                         
-                        dispatch(setUser(userData));
-                        console.log('User stored in Redux:', userData);
-                        navigate('/postsList');
-                    });
-                });
-    
-                console.log("Access Token:", accessToken);
-            } else {
-                console.error("Facebook login failed", response);
-                alert("Échec de la connexion Facebook. Veuillez réessayer.");
-            }
-        }, { scope: 'public_profile,email,user_likes,user_photos,user_videos,user_friends,user_posts' });
-    };
+                        // L'appel SDK pour récupérer les pages.
+                        new Promise((resolve, reject) => {
+                            window.FB.api('/me/accounts?fields=id,name,picture,access_token', (pagesResponse) => {
+                                if (pagesResponse && !pagesResponse.error) {
+                                    const pages = pagesResponse.data.map(page => ({
+                                        id: page.id,
+                                        name: page.name,
+                                        picture: page.picture.data.url,
+                                        accessToken: page.access_token,
+                                    }));
+                                    resolve(pages);
+                                } else {
+                                    reject(pagesResponse.error);
+                                }
+                            });
+                        }),
+                    ]);
+
+                    // Mise à jour des données dans Redux
+                    dispatch(setUser(profileResponse));
+                    dispatch(setUserPages(pagesData));
+                    console.log("Données récupérées :", { profileResponse, pagesData });
+
+                    // Redirection après succès
+                    navigate('/postsList');
+                } catch (err) {
+                    console.error("Erreur lors de la récupération :", err);
+                }
+            };
+
+            // Exécute la fonction asynchrone pour récupérer les données
+            fetchData();
+        } else {
+            console.error("Facebook login failed", response);
+            alert("Échec de la connexion Facebook. Veuillez réessayer.");
+        }
+    }, { scope: 'email,publish_video,pages_show_list,pages_read_engagement,pages_manage_posts,pages_read_user_content' });
+};
     
     // const handleLogin = () => {
     //     window.FB.login(response => {
