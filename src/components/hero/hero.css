@@ -1,0 +1,99 @@
+/* src/components/hero.css */
+
+:root {
+    --color-bg-black: #1D1D1D;
+    --color-text: #333333;
+    --color-light: #fff;
+    --font-base-family: 'Lato', 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+    --line-height: 1.2;
+}
+
+/* BASE STYLES */
+*,
+*:before,
+*:after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-base-family, sans-serif);
+    background: var(--color-light);
+    color: var(--color-text);
+}
+
+/* HERO SECTION STYLES */
+.hero {
+    display: flex;
+    height: 100vh; /* Full viewport height */
+    width: 100vw; /* Full viewport width */
+    overflow: hidden; /* Prevent overflow */
+    position: relative; /* For absolute positioning of shape */
+}
+
+.hero-shape {
+    position: absolute; /* Position it absolutely */
+    left: 0; /* Align to the left */
+    top: 0; /* Align to the top */
+    height: 100%; /* Full height */
+    width: 50%; /* Adjust width as needed */
+    background-color: rgba(255, 255, 255, 0.8); /* Example background color */
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%); /* Define the shape */
+    z-index: 1; /* Below the text and image */
+}
+
+.hero-text {
+    flex: 1; /* Take remaining space */
+    padding: 2rem; /* Add some padding */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Center content vertically */
+    z-index: 2; /* Above the shape */
+}
+
+.main__heading {
+    font-size: 4rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    color: #485ede;
+}
+
+.main__sub {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    font-weight: 300;
+}
+
+.main__button {
+    background: var(--color-bg-black);
+    color: var(--color-light);
+    font-size: 1rem;
+    width: 16.5rem;
+    height: 4.5rem;
+    cursor: pointer;
+    line-height: 1.4;
+    font-weight: 700;
+    text-transform: uppercase;
+    border: none; /* No border */
+    transition: background 0.3s; /* Transition effect */
+}
+
+.main__button:hover {
+    background: darken(var(--color-bg-black), 10%); /* Darker on hover */
+}
+
+.hero-image {
+    flex: 1; /* Take remaining space */
+    display: flex; /* Flex for centering */
+    justify-content: center; /* Center image */
+    align-items: center; /* Center image vertically */
+    z-index: 2; /* Above the shape */
+}
+
+.hero-image img {
+    height: 100%; /* Take full height */
+    width: auto; /* Maintain aspect ratio */
+    max-width: none; /* Remove max-width restriction */
+    object-fit: cover; /* Cover the space */
+}

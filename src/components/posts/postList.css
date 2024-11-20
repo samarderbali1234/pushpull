@@ -1,0 +1,120 @@
+/* src/components/PostsList.css */
+
+.posts-list {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.post {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.post-date {
+    color: #555;
+    font-size: 0.9em;
+}
+
+.post-message {
+    font-size: 1em;
+    color: #333;
+    margin: 10px 0;
+}
+
+.post-image, .post-video {
+    width: 100%;
+    max-width: 100%;
+    max-height: 500px;
+    margin-top: 10px;
+    border-radius: 8px;
+}
+
+.post-actions {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 10px;
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
+}
+
+.like-button, .comment-button, .share-button {
+    background: none;
+    border: none;
+    color: #1877f2;
+    cursor: pointer;
+    font-weight: bold;
+    padding: 5px;
+    font-size: 0.9em;
+}
+
+
+/*pour le refraichement et loading*/
+
+.loading-container {
+    display: flex;
+    justify-content: center; /* Centre horizontalement */
+    align-items: center; /* Centre verticalement */
+    height: 100px; /* Hauteur de la zone de chargement */
+    font-size: 20px; /* Taille de la police */
+    color: #555; /* Couleur du texte */
+}
+
+.loading-circle {
+    border: 5px solid #f3f3f3; /* Couleur de fond du cercle */
+    border-top: 5px solid #3498db; /* Couleur du haut du cercle */
+    border-radius: 50%; /* Pour faire un cercle */
+    width: 30px; /* Largeur du cercle */
+    height: 30px; /* Hauteur du cercle */
+    animation: spin 1s linear infinite; /* Animation du cercle */
+}
+
+.loading-dots {
+    display: flex; /* Flex pour les points */
+    justify-content: center; /* Centre les points */
+}
+
+.dot {
+    width: 8px; /* Largeur des points */
+    height: 8px; /* Hauteur des points */
+    margin: 0 5px; /* Espacement entre les points */
+    border-radius: 50%; /* Pour faire des points */
+    background-color: #3498db; /* Couleur des points */
+    animation: bounce 0.6s infinite alternate; /* Animation des points */
+}
+
+.dot:nth-child(2) {
+    animation-delay: 0.2s; /* Délai pour le deuxième point */
+}
+
+.dot:nth-child(3) {
+    animation-delay: 0.4s; /* Délai pour le troisième point */
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes bounce {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.5); }
+}

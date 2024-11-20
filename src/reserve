@@ -1,0 +1,189 @@
+import React, { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { setAccessToken, setUser } from './redux/actions/authActions';
+
+const App = () => {
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        window.fbAsyncInit = () => {
+            window.FB.init({
+                appId: '3909554635996171', // Remplacez par l'ID de votre app Facebook
+                autoLogAppEvents: true,
+                xfbml: true,
+                version: 'v16.0'
+            });
+        };
+    }, []);
+
+    const handleLogin = () => {
+        window.FB.login(response => {
+            if (response.authResponse) {
+                const accessToken = response.authResponse.accessToken;
+                dispatch(setAccessToken(accessToken));
+                window.FB.api('/me', { fields: 'id,name,email' }, user => {
+                    dispatch(setUser(user));
+                });
+            }
+        }, { scope: 'public_profile,email,pages_read_engagement,pages_manage_posts' });
+    };
+
+    return (
+        <div>
+            <button onClick={handleLogin}>Se connecter avec Facebook</button>
+        </div>
+    );
+};
+
+export default App;
+
+
+// // src/components/PostsList.js
+// import React, { useEffect } from 'react';
+// import { useDispatch, useSelector } from 'react-redux';
+// import { fetchPosts } from '../redux/actions/postActions';
+
+// const PostsList = () => {
+//     const dispatch = useDispatch();
+//     const posts = useSelector(state => state.posts?.items || []); // Utilisation d'un opérateur de chaîne optionnelle
+//     const loading = useSelector(state => state.posts?.loading);
+
+//     useEffect(() => {
+//         dispatch(fetchPosts());
+//     }, [dispatch]);
+
+//     if (loading) return <p>Loading...</p>;
+
+//     return (
+//         <div>
+//             <h2>Vos Publications</h2>
+//             {posts.length > 0 ? (
+//                 posts.map(post => (
+//                     <div key={post.id}>
+//                         <p>{post.message}</p>
+//                     </div>
+//                 ))
+//             ) : (
+//                 <p>Aucune publication trouvée.</p>
+//             )}
+//         </div>
+//     );
+// };
+
+// export default PostsList;
+
+
+
+
+
+
+
+
+
+
+
+// // src/components/PostsList.js
+// import React, { useEffect } from 'react';
+// import { useDispatch, useSelector } from 'react-redux';
+// import { fetchPosts } from '../redux/actions/postActions';
+
+// const PostsList = () => {
+//     const dispatch = useDispatch();
+//     const posts = useSelector(state => state.posts?.items || []); // Utilisation d'un opérateur de chaîne optionnelle
+//     const loading = useSelector(state => state.posts?.loading);
+
+//     useEffect(() => {
+//         dispatch(fetchPosts());
+//     }, [dispatch]);
+
+//     if (loading) return <p>Loading...</p>;
+
+//     return (
+//         <div>
+//             <h2>Vos Publications</h2>
+//             {posts.length > 0 ? (
+//                 posts.map(post => (
+//                     <div key={post.id}>
+//                         <p>{post.message}</p>
+//                     </div>
+//                 ))
+//             ) : (
+//                 <p>Aucune publication trouvée.</p>
+//             )}
+//         </div>
+//     );
+// };
+
+// export default PostsList;
+
+
+// src/components/PostsList.js
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchPosts } from '../redux/actions/postActions';
+
+const PostsList = () => {
+    const accessToken2 = useSelector((state) => state.auth.accessToken);
+    const dispatch = useDispatch();
+    const { posts, loading, nextPage } = useSelector(state => ({
+        posts: state.posts.posts,
+        loading: state.posts.loading,
+        nextPage: state.posts.nextPage,
+    }));
+    useEffect(() => {
+        console.log("token222",accessToken2)
+        const checkFBSDK = setInterval(() => {
+          if (window.FB) {
+            clearInterval(checkFBSDK);
+            // Vérifiez le statut de connexion
+            window.FB.getLoginStatus((response) => {
+              if (response.status === 'connected') {
+                dispatch(fetchPosts());
+              } else {
+                console.error("L'utilisateur n'est pas connecté.");
+              }
+            });
+          }
+        }, 100); // Vérifie toutes les 100 ms si le SDK est chargé
+    
+        return () => clearInterval(checkFBSDK);
+      }, [dispatch]);
+    //useEffect(() => {
+      //  dispatch(fetchPosts()); // Chargement initial des publications
+    //}, [dispatch]);
+
+    const handleScroll = () => {
+        if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 200) {
+            if (nextPage) {
+                dispatch(fetchPosts(nextPage)); // Chargez plus de publications
+            }
+        }
+    };
+
+    useEffect(() => {
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [nextPage]);
+
+    if (loading) return <p>Loading...
+         {accessToken2 && <p>Token: {accessToken2}</p>}
+    </p>;
+
+    return (
+        <div>
+            <h2>Vos Publications</h2>
+            {accessToken2 && <p>Token: {accessToken2}</p>}
+            {posts.length === 0 ? (
+                <p>Aucune publication trouvée.</p>
+            ) : (
+                posts.map(post => (
+                    <div key={post.id}>
+                        <p>{post.message}</p>
+                    </div>
+                ))
+            )}
+        </div>
+    );
+};
+
+export default PostsList;
