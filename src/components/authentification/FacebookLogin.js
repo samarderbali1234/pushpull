@@ -33,96 +33,65 @@ const FacebookLogin = () => {
             fjs.parentNode.insertBefore(js, fjs);
         }(document, 'script', 'facebook-jssdk'));
     }, []);
-  //récupération paralléle
-  const handleLogin = () => {
-    window.FB.login((response) => {
-        if (response.authResponse) {
-            const accessToken = response.authResponse.accessToken;
-            dispatch(setAccessToken(accessToken));
-
-            const fetchData = async () => {
-                try {
-                    // Exécution parallèle des appels avec promise all permet d'exécuter  tâches simultanément
-                    const [profileResponse, pagesData] = await Promise.all([
-                        // L'appel REST pour récupérer le profil
-                        fetch(`https://graph.facebook.com/v21.0/me?fields=id,name,email,picture&access_token=${accessToken}`)
-                            .then(res => res.json())
-                            .then(profile => ({
-                                id: profile.id,
-                                name: profile.name,
-                                email: profile.email,
-                                profilePicture: profile.picture.data.url,
-                            })),
-                        
-                        // L'appel SDK pour récupérer les pages.
-                        new Promise((resolve, reject) => {
-                            window.FB.api('/me/accounts?fields=id,name,picture,access_token', (pagesResponse) => {
-                                if (pagesResponse && !pagesResponse.error) {
-                                    const pages = pagesResponse.data.map(page => ({
+ //récupération séquentiel
+    const handleLogin = () => {
+        window.FB.login((response) => {
+            if (response.authResponse) {
+                const accessToken = response.authResponse.accessToken;
+                dispatch(setAccessToken(accessToken));
+    
+                // Encapsuler les appels async dans une fonction interne
+                const fetchProfileAndPages = async () => {
+                    try {
+                        // Étape 1 : Récupérer le profil via l'API REST
+                        const profileResponse = await fetch(`https://graph.facebook.com/v21.0/me?fields=id,name,email,picture&access_token=${accessToken}`);
+                        const profile = await profileResponse.json();
+                        const profileData = {
+                            id: profile.id,
+                            name: profile.name,
+                            email: profile.email,
+                            profilePicture: profile.picture.data.url,
+                        };
+    
+                        dispatch(setUser(profileData)); // Stocker le profil dans Redux
+                        console.log("Profil récupéré :", profileData);
+    
+                        // Étape 2 : Récupérer les pages via le SDK Facebook
+                        const pagesResponse = await new Promise((resolve, reject) => {
+                            window.FB.api('/me/accounts?fields=id,name,picture,access_token', (response) => {
+                                if (response && !response.error) {
+                                    const pagesData = response.data.map(page => ({
                                         id: page.id,
                                         name: page.name,
                                         picture: page.picture.data.url,
                                         accessToken: page.access_token,
                                     }));
-                                    resolve(pages);
+                                    resolve(pagesData);
                                 } else {
-                                    reject(pagesResponse.error);
+                                    reject(response.error);
                                 }
                             });
-                        }),
-                    ]);
-
-                    // Mise à jour des données dans Redux
-                    dispatch(setUser(profileResponse));
-                    dispatch(setUserPages(pagesData));
-                    console.log("Données récupérées :", { profileResponse, pagesData });
-
-                    // Redirection après succès
-                    navigate('/postsList');
-                } catch (err) {
-                    console.error("Erreur lors de la récupération :", err);
-                }
-            };
-
-            // Exécute la fonction asynchrone pour récupérer les données
-            fetchData();
-        } else {
-            console.error("Facebook login failed", response);
-            alert("Échec de la connexion Facebook. Veuillez réessayer.");
-        }
-    }, { scope: 'email,publish_video,pages_show_list,pages_read_engagement,pages_manage_posts,pages_read_user_content' });
-};
+                        });
     
-    // const handleLogin = () => {
-    //     window.FB.login(response => {
-    //         if (response.authResponse) {
-    //             const accessToken = response.authResponse.accessToken;
-    //             dispatch(setAccessToken(accessToken));  // Stocker le token dans Redux
-
-                 
-
-
-    //             window.FB.api('/me?fields=id,name,email,picture', user => {
-    //                 // Inclure l'image de profil dans les données de l'utilisateur
-    //                 const userData = {
-    //                     id: user.id,
-    //                     name: user.name,
-    //                     email: user.email,
-    //                     profilePicture: user.picture.data.url, // URL de l'image de profil
-    //                 };
-                    
-    //                 dispatch(setUser(userData));  // Stocker les infos de l'utilisateur dans Redux
-    //                 console.log('User stored in Redux:', userData);
-    //                 navigate('/postsList');  // Redirection vers la page des posts après connexion
-    //             });
-
-    //             console.log("Access Token:", accessToken);
-    //         } else {
-    //             console.error("Facebook login failed", response);
-    //         }
-    //     }, { scope: 'public_profile,email,user_likes,user_photos,user_videos,user_friends,user_posts ' });
-    // };
-
+                        dispatch(setUserPages(pagesResponse)); // Stocker les pages dans Redux
+                        console.log("Pages récupérées :", pagesResponse);
+    
+                        // Redirection vers la liste des posts après le succès
+                        navigate('/postsList');
+                    } catch (err) {
+                        console.error("Erreur lors de la récupération des données :", err);
+                    }
+                };
+    
+                // Appeler la fonction async
+                fetchProfileAndPages();
+            } else {
+                console.error("Facebook login failed", response);
+                alert("Échec de la connexion Facebook. Veuillez réessayer.");
+            }
+        }, { scope: 'email,publish_video,pages_show_list,pages_read_engagement,pages_manage_posts,pages_read_user_content' });
+    };
+   
     return (
         <button className='btn' onClick={handleLogin}>
             Se connecter avec Facebook
